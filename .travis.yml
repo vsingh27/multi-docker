@@ -1,0 +1,24 @@
+language: generic
+sudo: required
+services:
+    -   docker
+
+before-install:
+    -   docker build -t vbrar/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    -   docker run vbrar/react-test npm test -- --coverage
+
+after_success:
+    -   docker build -t vbrar/multi-client ./client
+    -   docker build -t vbrar/multi-nginx ./nginx
+    -   docker build -t vbrar/multi-server ./server
+    -   docker build -t vbrar/multi-worker ./worker
+
+    #Log in to Docker CLI
+    -   echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    #Take those images and push to Docker Hub
+    -   docker push vbrar/multi-client
+    -   docker push vbrar/multi-nginx
+    -   docker push vbrar/multi-server
+    -   docker push vbrar/multi-worker
